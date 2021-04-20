@@ -29,6 +29,12 @@ FlashcardsLeitnerSystem >> addCard: aCard [
 	boxes first addCard: aCard.
 ]
 
+{ #category : #public }
+FlashcardsLeitnerSystem >> allCards [
+
+	^boxes inject: OrderedCollection new into: [ :result  :box | result addAll: box cards; yourself ]
+]
+
 { #category : #accessing }
 FlashcardsLeitnerSystem >> boxes [
 	^ boxes
@@ -91,6 +97,21 @@ FlashcardsLeitnerSystem >> processAnswer: anAnswer [
 	anAnswer = selectedCard translation
 		ifTrue: [ self moveSelectedCardForward ]
 		ifFalse: [ self moveSelectedCardBackwards ]
+]
+
+{ #category : #public }
+FlashcardsLeitnerSystem >> removeCardAt: anIndex [
+	boxes first removeAt: anIndex
+	
+]
+
+{ #category : #public }
+FlashcardsLeitnerSystem >> removeCardNamed: aName ifAbsent: aBlock [
+	boxes do: [ :b |
+		b removeCardNamed: aName ifPresent: [:c | ^c ]].
+	
+	^aBlock value
+	
 ]
 
 { #category : #private }

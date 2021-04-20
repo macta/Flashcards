@@ -12,6 +12,11 @@ FlashcardBox >> addCard: aCard [
 	cards add: aCard
 ]
 
+{ #category : #accessing }
+FlashcardBox >> cards [
+	^ cards
+]
+
 { #category : #initialization }
 FlashcardBox >> initialize [ 	
 	super initialize.
@@ -37,6 +42,21 @@ FlashcardBox >> printOn: aStream [
 		nextPutAll: '(cards: ';
 		print: self numberOfCards;
 		nextPut: $)
+]
+
+{ #category : #adding }
+FlashcardBox >> removeAt: anIndex [
+	cards removeAt: anIndex
+]
+
+{ #category : #accessing }
+FlashcardBox >> removeCardNamed: aName ifPresent: aBlock [
+	cards doWithIndex: [:c :i |
+			c word = aName ifTrue: [ 
+				cards removeAt: i.
+				^aBlock value: c  ]].
+		
+	
 ]
 
 { #category : #'as yet unclassified' }
