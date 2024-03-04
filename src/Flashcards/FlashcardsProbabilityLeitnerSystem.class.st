@@ -1,5 +1,5 @@
 Class {
-	#name : #FlashcardsLeitnerSystem,
+	#name : #FlashcardsProbabilityLeitnerSystem,
 	#superclass : #Object,
 	#instVars : [
 		'boxes',
@@ -12,53 +12,53 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-FlashcardsLeitnerSystem class >> defaultProbabilities [
+FlashcardsProbabilityLeitnerSystem class >> defaultProbabilities [
 	^ #(0.5 0.25 0.125 0.05)
 ]
 
 { #category : #'as yet unclassified' }
-FlashcardsLeitnerSystem class >> withProbabilities: aCollectionOfProbabilities [
+FlashcardsProbabilityLeitnerSystem class >> withProbabilities: aCollectionOfProbabilities [
 	^ self new
-		initializeProbabilities: aCollectionOfProbabilities;
+		initializeDefaultBoxes: aCollectionOfProbabilities;
 		yourself
 ]
 
 { #category : #public }
-FlashcardsLeitnerSystem >> addCard: aCard [
+FlashcardsProbabilityLeitnerSystem >> addCard: aCard [
 	"The new card always goes into the first box"
 	boxes first addCard: aCard.
 ]
 
 { #category : #public }
-FlashcardsLeitnerSystem >> allCards [
+FlashcardsProbabilityLeitnerSystem >> allCards [
 
 	^boxes inject: OrderedCollection new into: [ :result  :box | result addAll: box cards; yourself ]
 ]
 
 { #category : #accessing }
-FlashcardsLeitnerSystem >> boxes [
+FlashcardsProbabilityLeitnerSystem >> boxes [
 	^ boxes
 ]
 
 { #category : #initialization }
-FlashcardsLeitnerSystem >> initialize [ 
+FlashcardsProbabilityLeitnerSystem >> initialize [ 
 	super initialize.
 	random := Random new.
 	
-	self initializeDefaultProbabilities.
+	self initializeDefaultBoxes.
 ]
 
 { #category : #initialization }
-FlashcardsLeitnerSystem >> initializeDefaultProbabilities [
-	self initializeProbabilities: self class defaultProbabilities.
+FlashcardsProbabilityLeitnerSystem >> initializeDefaultBoxes [
+	self initializeDefaultBoxes: self class defaultProbabilities.
 ]
 
 { #category : #initialization }
-FlashcardsLeitnerSystem >> initializeProbabilities: aCollectionOfProbabilities [
+FlashcardsProbabilityLeitnerSystem >> initializeDefaultBoxes: aCollectionOfProbabilities [
 	| sum |
 	
 	boxes := OrderedCollection new.
-	aCollectionOfProbabilities size timesRepeat: [ boxes add: FlashcardBox new ].
+	aCollectionOfProbabilities size timesRepeat: [ boxes add: FlashcardList new ].
 	
 	sum := 0.
 	boxCumulativeProbabilities := Dictionary new.
@@ -69,13 +69,13 @@ FlashcardsLeitnerSystem >> initializeProbabilities: aCollectionOfProbabilities [
 ]
 
 { #category : #private }
-FlashcardsLeitnerSystem >> moveSelectedCardBackwards [
+FlashcardsProbabilityLeitnerSystem >> moveSelectedCardBackwards [
 	"This happens if the answer was wrong. The card is moved back to the first box"
 	boxes first addCard: selectedCard.
 ]
 
 { #category : #private }
-FlashcardsLeitnerSystem >> moveSelectedCardForward [
+FlashcardsProbabilityLeitnerSystem >> moveSelectedCardForward [
 	"This happens if the answer is correct. The card should progress to the next box. And if it was already taken from the last box, it is put back into the last box"
 	| nextBoxNumber |
 	
@@ -87,42 +87,45 @@ FlashcardsLeitnerSystem >> moveSelectedCardForward [
 ]
 
 { #category : #accessing }
-FlashcardsLeitnerSystem >> numberOfBoxes [
+FlashcardsProbabilityLeitnerSystem >> numberOfBoxes [
 	^ boxes size
 ]
 
 { #category : #public }
-FlashcardsLeitnerSystem >> processAnswer: anAnswer [
+FlashcardsProbabilityLeitnerSystem >> pickRandomCard [
+	self selectRandomBox.
+	^selectedCard := (boxes at: selectedBoxNumber) pickRandomCard.
+]
+
+{ #category : #public }
+FlashcardsProbabilityLeitnerSystem >> processAnswer: anAnswer [
 	"Check the answer and move the card forward if the answer is correct or move it backwards if the answer is wrong"
-	anAnswer = selectedCard translation
+	anAnswer = selectedCard answer
 		ifTrue: [ self moveSelectedCardForward ]
 		ifFalse: [ self moveSelectedCardBackwards ]
 ]
 
 { #category : #public }
-FlashcardsLeitnerSystem >> removeCardAt: anIndex [
+FlashcardsProbabilityLeitnerSystem >> removeCardAt: anIndex [
 	boxes first removeAt: anIndex
 	
 ]
 
 { #category : #public }
-FlashcardsLeitnerSystem >> removeCardNamed: aName ifAbsent: aBlock [
-	boxes do: [ :b |
-		b removeCardNamed: aName ifPresent: [:c | ^c ]].
-	
-	^aBlock value
+FlashcardsProbabilityLeitnerSystem >> removeCardNamed: aName ifAbsent: aBlock [
+	^boxes removeCardNamed: aName ifAbsent: aBlock 
 	
 ]
 
 { #category : #private }
-FlashcardsLeitnerSystem >> returnSelectedCard [
+FlashcardsProbabilityLeitnerSystem >> returnSelectedCard [
 	"Put the selected card back in case you can't answer and want to pause"
 	
-	(boxes at: selectedBoxNumber) addCard: selectedCard.
+	self selectedBox addCard: selectedCard.
 ]
 
 { #category : #private }
-FlashcardsLeitnerSystem >> selectRandomBox [
+FlashcardsProbabilityLeitnerSystem >> selectRandomBox [
 	| nonemptyBoxes scalingCoefficient sumOfProbabilities randomNumber scaledProbability selectedBox |
 	nonemptyBoxes := boxes reject: [ :box | box isEmpty ].
 	
@@ -141,23 +144,17 @@ FlashcardsLeitnerSystem >> selectRandomBox [
 	selectedBoxNumber := boxes indexOf: selectedBox.
 ]
 
-{ #category : #public }
-FlashcardsLeitnerSystem >> selectRandomCard [
-	self selectRandomBox.
-	^selectedCard := (boxes at: selectedBoxNumber) takeRandomCard.
-]
-
 { #category : #accessing }
-FlashcardsLeitnerSystem >> selectedBox [
+FlashcardsProbabilityLeitnerSystem >> selectedBox [
 	^ boxes at: selectedBoxNumber 
 ]
 
 { #category : #accessing }
-FlashcardsLeitnerSystem >> selectedBoxNumber [
+FlashcardsProbabilityLeitnerSystem >> selectedBoxNumber [
 	^selectedBoxNumber 
 ]
 
 { #category : #accessing }
-FlashcardsLeitnerSystem >> selectedCard [
+FlashcardsProbabilityLeitnerSystem >> selectedCard [
 	^ selectedCard
 ]

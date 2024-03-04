@@ -2,17 +2,26 @@ Class {
 	#name : #Flashcard,
 	#superclass : #Object,
 	#instVars : [
-		'word',
-		'translation'
+		'box',
+		'answer',
+		'question'
 	],
 	#category : #'Flashcards-Models'
 }
 
 { #category : #'as yet unclassified' }
-Flashcard class >> word: aWord translation: aTranslation [
+Flashcard class >> question: aWord answer: anAnswer [
 	^ self new
-		initializeWord: aWord translation: aTranslation;
+		initializeQuestion: aWord answer: anAnswer;
 		yourself
+]
+
+{ #category : #comparing }
+Flashcard >> <= anObject [
+	anObject class = self class
+		ifFalse: [ ^ false ].
+		
+	^ (self box <= anObject box) or: [self question <= anObject question ]
 ]
 
 { #category : #comparing }
@@ -20,19 +29,47 @@ Flashcard >> = anObject [
 	anObject class = self class
 		ifFalse: [ ^ false ].
 		
-	^ anObject word = word and: [
-		anObject translation = translation ].
+	^ anObject question = question and: [
+		anObject answer = answer ].
+]
+
+{ #category : #accessing }
+Flashcard >> answer [
+	^ answer
+]
+
+{ #category : #accessing }
+Flashcard >> box [
+
+	^ box ifNil: [ box := 1 ] 
+]
+
+{ #category : #accessing }
+Flashcard >> box: anObject [
+
+	box := anObject
+]
+
+{ #category : #'as yet unclassified' }
+Flashcard >> fail [
+	self box: (self box - 1 max: 1)
 ]
 
 { #category : #comparing }
 Flashcard >> hash [
-	^ word hash bitXor: translation hash
+	^ question hash bitXor: answer hash
 ]
 
 { #category : #initialization }
-Flashcard >> initializeWord: aWord translation: aTranslation [
-	word := aWord.
-	translation := aTranslation.
+Flashcard >> initializeQuestion: aQuestion answer: anAnswer [
+
+	question := aQuestion.
+	answer := anAnswer
+]
+
+{ #category : #'as yet unclassified' }
+Flashcard >> pass [
+	self box: self box + 1
 ]
 
 { #category : #printing }
@@ -42,26 +79,13 @@ Flashcard >> printOn: aStream [
 	super printOn: aStream.
 	aStream
 		nextPutAll: '(word: ';
-		print: word;
+		print: question;
+		nextPutAll: ', box: ';
+		print: self box;
 		nextPut: $)
 ]
 
 { #category : #accessing }
-Flashcard >> translation [
-	^ translation
-]
-
-{ #category : #accessing }
-Flashcard >> translation: anObject [
-	translation := anObject
-]
-
-{ #category : #accessing }
-Flashcard >> word [
-	^ word
-]
-
-{ #category : #accessing }
-Flashcard >> word: anObject [
-	word := anObject
+Flashcard >> question [
+	^ question
 ]

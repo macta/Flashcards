@@ -2,19 +2,19 @@
 A FlashcardsLeitnerSystemTest is a test class for testing the behavior of FlashcardsLeitnerSystem
 "
 Class {
-	#name : #FlashcardsLeitnerSystemTest,
+	#name : #FlashcardsProbabilityLeitnerSystemTest,
 	#superclass : #TestCase,
 	#category : #'Flashcards-Tests'
 }
 
 { #category : #tests }
-FlashcardsLeitnerSystemTest >> testDefaultProbabilities [
+FlashcardsProbabilityLeitnerSystemTest >> testDefaultProbabilities [
 
 	| fls results topSelection |
 	
-	fls := FlashcardsLeitnerSystem withProbabilities: #(0.5 0.25 0.125).
+	fls := FlashcardsProbabilityLeitnerSystem withProbabilities: #(0.5 0.25 0.125).
 	
-	1 to: 3 do: [ :i | fls addCard: (Flashcard word: i translation: i) ].
+	1 to: 3 do: [ :i | fls addCard: (Flashcard question: i answer: i) ].
 	
 	results := Bag new.
 	
@@ -34,15 +34,15 @@ FlashcardsLeitnerSystemTest >> testDefaultProbabilities [
 ]
 
 { #category : #tests }
-FlashcardsLeitnerSystemTest >> testEarlierBoxesMoreProbableToGetPicked [
+FlashcardsProbabilityLeitnerSystemTest >> testEarlierBoxesMoreProbableToGetPicked [
 
 	| fls card1 card2 card3 results topSelection |
 	
-	fls := FlashcardsLeitnerSystem withProbabilities: #(0.7 0.2 0.1).
+	fls := FlashcardsProbabilityLeitnerSystem withProbabilities: #(0.7 0.2 0.1).
 	
-	card1 := Flashcard word: 1 translation: 1.
-	card2 := Flashcard word: 2 translation: 2.
-	card3 := Flashcard word: 3 translation: 3.
+	card1 := Flashcard question: 1 answer: 1.
+	card2 := Flashcard question: 2 answer: 2.
+	card3 := Flashcard question: 3 answer: 3.
 		
 		
 	"sneaky way to setup boxes in known state"

@@ -9,8 +9,28 @@ FlashcardTest >> testAsFlashcard [
 	| card |
 	card := ('bonjour' -> 'hello') asFlashcard.
 	
-	self assert: card word equals: 'bonjour'.
-	self assert: card translation equals: 'hello'.
+	self assert: card question equals: 'bonjour'.
+	self assert: card answer equals: 'hello'.
+]
+
+{ #category : #tests }
+FlashcardTest >> testDemote [
+	| card1 |
+	
+	card1 := ('bonjour' -> 'hello') asFlashcard.
+	
+	self assert: card1 box equals: 1.
+	
+	card1 fail.
+	
+	self assert: card1 box equals: 1.
+	
+	card1 pass.
+	card1 pass.
+	
+	card1 fail.
+	
+	self assert: card1 box equals: 2.
 ]
 
 { #category : #tests }
@@ -42,10 +62,45 @@ FlashcardTest >> testHash [
 ]
 
 { #category : #tests }
+FlashcardTest >> testLessThanEqual [
+	| card1 card2 card3 card4 |
+	
+	card1 := ($1 -> $1) asFlashcard.
+	card2 := ($2 -> $2) asFlashcard. 
+	(card3 := ($2 -> $2) asFlashcard) pass.
+	card4 := ($3 -> $3) asFlashcard.
+	
+	self assert: card1 <= card1.
+	self assert: card1 <= card2.
+	
+	card2 pass.
+	
+	self assert: card1 <= card3.
+	self assert: card2 <= card3.
+	self assert: card4 <= card3.
+	
+	
+	
+]
+
+{ #category : #tests }
+FlashcardTest >> testPromote [
+	| card1 card2 card3 card4 |
+	
+	card1 := ('bonjour' -> 'hello') asFlashcard.
+	
+	self assert: card1 box equals: 1.
+	
+	card1 pass.
+	
+	self assert: card1 box equals: 2.
+]
+
+{ #category : #tests }
 FlashcardTest >> testWordTranslation [
 	| card |
-	card := Flashcard word: 'bonjour' translation: 'hello'.
+	card := Flashcard question: 'bonjour' answer: 'hello'.
 	
-	self assert: card word equals: 'bonjour'.
-	self assert: card translation equals: 'hello'.
+	self assert: card question equals: 'bonjour'.
+	self assert: card answer equals: 'hello'.
 ]
