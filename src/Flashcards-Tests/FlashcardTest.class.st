@@ -17,20 +17,18 @@ FlashcardTest >> testAsFlashcard [
 FlashcardTest >> testDemote [
 	| card1 |
 	
-	card1 := ('bonjour' -> 'hello') asFlashcard.
-	
-	self assert: card1 box equals: 1.
-	
-	card1 fail.
-	
-	self assert: card1 box equals: 1.
-	
-	card1 pass.
-	card1 pass.
-	
-	card1 fail.
+	card1 := ('bonjour' -> 'hello') asFlashcardInBox: 2.
 	
 	self assert: card1 box equals: 2.
+	
+	card1 fail.
+	
+	self assert: card1 box equals: 1.
+	
+	card1 fail.
+	card1 fail.	
+	
+	self assert: card1 box equals: 1.
 ]
 
 { #category : #tests }
@@ -84,8 +82,18 @@ FlashcardTest >> testLessThanEqual [
 ]
 
 { #category : #tests }
+FlashcardTest >> testMatches [
+	| card1 |
+	
+	card1 := ('bonjour' -> 'hello') asFlashcard.
+	
+	self assert: (card1 matches: card1 answer).
+	self deny: (card1 matches: 'nothing')
+]
+
+{ #category : #tests }
 FlashcardTest >> testPromote [
-	| card1 card2 card3 card4 |
+	| card1 |
 	
 	card1 := ('bonjour' -> 'hello') asFlashcard.
 	

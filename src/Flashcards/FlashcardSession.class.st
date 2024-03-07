@@ -5,71 +5,49 @@ Class {
 		'passedCards',
 		'failedCards',
 		'currentCard',
-		'iteration',
-		'applicableBoxes',
-		'flashcardList'
+		'sessionCards'
 	],
 	#category : #'Flashcards-Models'
 }
 
 { #category : #'instance creation' }
 FlashcardSession class >> new [
-	^self on: FlashcardList new
+	^self on: OrderedCollection new
 ]
 
 { #category : #'instance creation' }
-FlashcardSession class >> on: aFlashcardBox [
+FlashcardSession class >> on: aCollection [
 
-	^ self on: aFlashcardBox with: { 1 }
+	^ self on: aCollection matching: [ :c | c box = 1 ]
+]
+
+{ #category : #'as yet unclassified' }
+FlashcardSession class >> on: aCollection matching: aBlock [ 
+	^self basicNew 
+		initializeOn: aCollection matching: aBlock ;
+		yourself
 ]
 
 { #category : #'instance creation' }
-FlashcardSession class >> on: aFlashcardBox with: applicableBoxes [
+FlashcardSession class >> onEverything: aCollection [
 
-	^ self basicNew
-		  flashcardList: aFlashcardBox;
-		  applicableBoxes: applicableBoxes;
-		  yourself
-]
-
-{ #category : #adding }
-FlashcardSession >> addCards: aCollection [ 
-	self flashcardList addCards: aCollection 
-]
-
-{ #category : #'as yet unclassified' }
-FlashcardSession >> advanceIterationUsingBoxes: sequences [
-	self flashcardList addCards: self completedCards.
-	self applicableBoxes: sequences.
-	self failedCards: nil.
-	self passedCards: nil.
-	^self iteration: self iteration + 1
-]
-
-{ #category : #'as yet unclassified' }
-FlashcardSession >> allCardsInBoxes: aCollection [
-
-	^ aCollection inject: OrderedCollection new into: [ :result :box |
-		  result
-			  addAll: (self flashcardList allCardsInBox: box);
-			  yourself ]
+	^ self on: aCollection matching: [ :c | true ]
 ]
 
 { #category : #public }
-FlashcardSession >> applicableBoxes [
-	^applicableBoxes 
+FlashcardSession >> allCards [
+	^self failedCards, self passedCards, self sessionCards 
 ]
 
 { #category : #accessing }
-FlashcardSession >> applicableBoxes: anObject [
+FlashcardSession >> boxes [ 
 
-	applicableBoxes := anObject
+	^self allCards inject: Set new into: [ :r :c | r add: c box ]
 ]
 
-{ #category : #accessing }
-FlashcardSession >> applicableCards [
-
-	^self flashcardList allCardsSelectingFrom: [ :c | self applicableBoxes includes: c box ]
+{ #category : #'as yet unclassified' }
+FlashcardSession >> cardsLeft [
+	^self sessionCards size
 ]
 
 { #category : #accessing }
@@ -90,16 +68,10 @@ FlashcardSession >> currentCard: anObject [
 	^currentCard := anObject
 ]
 
-{ #category : #asserting }
-FlashcardSession >> fail: aFlashcard [ 
-	self failCard 
-]
-
 { #category : #accessing }
-FlashcardSession >> failCard [
-
+FlashcardSession >> failCard: aFlashcard [
 	
-	^ self failedCards add: (self flashcardList removeCard: self currentCard fail).
+	self failedCards add: aFlashcard fail
 ]
 
 { #category : #accessing }
@@ -109,55 +81,27 @@ FlashcardSession >> failedCards [
 ]
 
 { #category : #accessing }
-FlashcardSession >> failedCards: anObject [
-
-	failedCards := anObject
-]
-
-{ #category : #accessing }
-FlashcardSession >> flashcardList [
-
-	^ flashcardList 
-]
-
-{ #category : #accessing }
-FlashcardSession >> flashcardList: anObject [
-
-	flashcardList := anObject
-]
-
-{ #category : #accessing }
 FlashcardSession >> hasCurrentCard [ 
 
 	^self currentCard notNil
 ]
 
+{ #category : #initialization }
+FlashcardSession >> initializeOn: aCollection matching: aFullBlockClosure [ 
+	sessionCards := (aCollection select: aFullBlockClosure) asOrderedCollection.
+	
+]
+
 { #category : #testing }
 FlashcardSession >> isComplete [
-	^self remainingCards isEmpty
+	^self sessionCards isEmpty
 ]
 
 { #category : #accessing }
-FlashcardSession >> iteration [
+FlashcardSession >> passCard: aFlashcard [
 
-	^ iteration ifNil: [ iteration := 1 ]
-]
-
-{ #category : #accessing }
-FlashcardSession >> iteration: anObject [
-
-	iteration := anObject
-]
-
-{ #category : #'as yet unclassified' }
-FlashcardSession >> pass: aFlashcard [ 
-	self passCard 
-]
-
-{ #category : #accessing }
-FlashcardSession >> passCard [
-
-	^ self passedCards add: (self flashcardList removeCard: currentCard pass)
+	self passedCards add: aFlashcard pass.
+	self currentCard: nil
 ]
 
 { #category : #accessing }
@@ -166,21 +110,61 @@ FlashcardSession >> passedCards [
 	^ passedCards ifNil: [ passedCards := OrderedCollection new ]
 ]
 
-{ #category : #accessing }
-FlashcardSession >> passedCards: anObject [
-
-	passedCards := anObject
+{ #category : #'as yet unclassified' }
+FlashcardSession >> pickRandomCard [
+		| selectedCard |
+	
+	self isComplete ifTrue: [
+		Error signal: 'No cards left' ].
+	
+	selectedCard := self sessionCards atRandom.
+	self sessionCards remove: selectedCard.
+	^ selectedCard 
+	
 ]
 
 { #category : #'as yet unclassified' }
-FlashcardSession >> pickRandomCard [
-	| card |
-	card := self flashcardList pickRandomCardSelectingFrom: [ :c | self applicableBoxes includes: c box ].
-	^self currentCard: card
+FlashcardSession >> pickRandomCardIfNone: aConstantBlockClosure [
+
+	^ self isComplete
+		  ifTrue: aConstantBlockClosure
+		  ifFalse: [ self pickRandomCard ]
+]
+
+{ #category : #accessing }
+FlashcardSession >> progress [
+	^(self completedCards size)@(self sessionCards size) 
 ]
 
 { #category : #accessing }
 FlashcardSession >> remainingCards [
 
-	^  self applicableCards
+	^  self sessionCards 
+]
+
+{ #category : #'as yet unclassified' }
+FlashcardSession >> reset [
+	self sessionCards addAll: self completedCards.
+	
+	failedCards := nil.
+	passedCards:= nil.
+	
+]
+
+{ #category : #accessing }
+FlashcardSession >> sessionCards [
+
+	^ sessionCards
+]
+
+{ #category : #'as yet unclassified' }
+FlashcardSession >> verifyCard: aFlashcard withAnswer: aString [
+
+	^ (aFlashcard matches: aString)
+		  ifTrue: [
+			  self passCard: aFlashcard.
+			  true ]
+		  ifFalse: [
+			  self failCard: aFlashcard.
+			  false ]
 ]

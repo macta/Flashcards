@@ -67,6 +67,11 @@ Flashcard >> initializeQuestion: aQuestion answer: anAnswer [
 	answer := anAnswer
 ]
 
+{ #category : #accessing }
+Flashcard >> matches: anObject [
+	^ self answer = anObject 
+]
+
 { #category : #'as yet unclassified' }
 Flashcard >> pass [
 	self box: self box + 1

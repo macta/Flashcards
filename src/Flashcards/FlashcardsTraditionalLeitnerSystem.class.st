@@ -2,12 +2,12 @@ Class {
 	#name : #FlashcardsTraditionalLeitnerSystem,
 	#superclass : #Object,
 	#instVars : [
-		'boxes',
 		'random',
-		'boxSequences',
 		'selectedCard',
 		'sessionCount',
-		'flashcardSession'
+		'cards',
+		'flashcardSession',
+		'sessionFrequencies'
 	],
 	#category : #'Flashcards-Controllers'
 }
@@ -18,55 +18,69 @@ FlashcardsTraditionalLeitnerSystem class >> default [
 	^self withBoxSequences: { { 1 }. { 1. 2 }. { 1}. { 1.2 }. {1. 2. 3} }
 ]
 
+{ #category : #schedulling }
+FlashcardsTraditionalLeitnerSystem class >> schedule: aCollectionOfSequences [ 
+	^self new
+		sessionFrequencies: aCollectionOfSequences;
+		yourself
+]
+
 { #category : #'as yet unclassified' }
 FlashcardsTraditionalLeitnerSystem class >> withBoxSequences: aCollectionOfSequences [
 	^ self new
-		boxSequences: aCollectionOfSequences;
+		sessionFrequencies: aCollectionOfSequences;
 		yourself
 ]
 
 { #category : #public }
 FlashcardsTraditionalLeitnerSystem >> addCard: aCard [
-	"The new card always goes into the first box"
-	boxes first addCard: aCard.
+
+	self cards add: aCard.
 ]
 
 { #category : #adding }
 FlashcardsTraditionalLeitnerSystem >> addCards: aCollection [ 
-	self flashcardSession addCards: aCollection 
+	aCollection do: [ :c | self addCard: c ]
 ]
 
 { #category : #public }
 FlashcardsTraditionalLeitnerSystem >> allCards [
 
-	^self flashcardSession allCards 
+	^self cards
 ]
 
 { #category : #public }
 FlashcardsTraditionalLeitnerSystem >> applicableBoxes [
 	
-	^(self sessionFrequency withIndexCollect:  [ :f :i | (sessionCount \\ f) isZero ifTrue: [ i ] ifFalse: [ nil ]]) select: [ :each | each notNil ]
+	^self sessionFrequency 
 ]
 
 { #category : #accessing }
-FlashcardsTraditionalLeitnerSystem >> boxSequences [
+FlashcardsTraditionalLeitnerSystem >> cards [
 
-	^ boxSequences
+	^ cards
 ]
 
 { #category : #accessing }
-FlashcardsTraditionalLeitnerSystem >> boxSequences: aCollection [ 
-	boxSequences := aCollection
+FlashcardsTraditionalLeitnerSystem >> cards: anObject [
+
+	cards := anObject
 ]
 
-{ #category : #accessing }
-FlashcardsTraditionalLeitnerSystem >> boxes [
-	^ boxes
+{ #category : #'instance creation' }
+FlashcardsTraditionalLeitnerSystem >> createSession [
+	^self createSession: self applicableBoxes
+]
+
+{ #category : #'instance creation' }
+FlashcardsTraditionalLeitnerSystem >> createSession: frequencies [
+	
+	^FlashcardSession on: self cards matching: [ :c | frequencies includes: c box ]
 ]
 
 { #category : #asserting }
 FlashcardsTraditionalLeitnerSystem >> fail: aFlashcard [ 
-	self flashcardSession fail: aFlashcard 
+	self flashcardSession failCard: aFlashcard 
 ]
 
 { #category : #accessing }
@@ -84,7 +98,14 @@ FlashcardsTraditionalLeitnerSystem >> flashcardSession [
 { #category : #accessing }
 FlashcardsTraditionalLeitnerSystem >> flashcardSession: anObject [
 
-	flashcardSession := anObject
+	^flashcardSession := anObject
+]
+
+{ #category : #'as yet unclassified' }
+FlashcardsTraditionalLeitnerSystem >> fullSession [
+	| f |
+	f := self sessionFrequencies flatCollectAsSet: [:c | c].
+	^self createSession: f asSortedCollection 
 ]
 
 { #category : #public }
@@ -97,36 +118,50 @@ FlashcardsTraditionalLeitnerSystem >> hasCompletedSession [
 FlashcardsTraditionalLeitnerSystem >> initialize [ 
 	super initialize.
 	random := Random new.
+	cards := OrderedCollection new.
 	sessionCount := 1.
 	
 ]
 
-{ #category : #private }
-FlashcardsTraditionalLeitnerSystem >> moveSelectedCardBackwards [
-	"This happens if the answer was wrong. The card is moved back to the first box"
-	boxes first addCard: selectedCard.
-]
-
-{ #category : #private }
-FlashcardsTraditionalLeitnerSystem >> moveSelectedCardForward [
-	"This happens if the answer is correct. The card should progress to the next box. And if it was already taken from the last box, it is put back into the last box"
-	| nextBoxNumber |
+{ #category : #'instance creation' }
+FlashcardsTraditionalLeitnerSystem >> newSession [
 	
-	nextBoxNumber := selectedBoxNumber = boxes size
-		ifTrue: [ selectedBoxNumber ]
-		ifFalse: [ selectedBoxNumber + 1].
-		
-	(boxes at: nextBoxNumber) addCard: selectedCard.
+	self sessionCount: 1.
+	^self flashcardSession: self createSession.
+	
 ]
 
-{ #category : #accessing }
-FlashcardsTraditionalLeitnerSystem >> numberOfBoxes [
-	^ boxes size
+{ #category : #public }
+FlashcardsTraditionalLeitnerSystem >> nextCardAfter: aFlashcard given: aBlock [
+	"Check the answer and move the card forward if the answer is correct or move it backwards if the answer is wrong"
+	
+	aBlock value
+		ifTrue: [ self flashcardSession pass: aFlashcard ]
+		ifFalse: [ self flashcardSession fail: aFlashcard ]
+]
+
+{ #category : #public }
+FlashcardsTraditionalLeitnerSystem >> nextCardAfter: aFlashcard given: answerBlock otherwise: finishedBock [
+	"Check the answer and move the card forward if the answer is correct or move it backwards if the answer is wrong"
+
+	answerBlock value
+		ifTrue: [ self flashcardSession pass: aFlashcard ]
+		ifFalse: [ self flashcardSession fail: aFlashcard ].
+
+	^ self flashcardSession isComplete
+		  ifTrue: finishedBock
+		  ifFalse: [ self flashcardSession pickRandomCard ]
+]
+
+{ #category : #'as yet unclassified' }
+FlashcardsTraditionalLeitnerSystem >> nextSession [
+	self sessionCount: self sessionCount +1.
+	^self createSession 
 ]
 
 { #category : #'as yet unclassified' }
 FlashcardsTraditionalLeitnerSystem >> pass: aFlashcard [ 
-	self flashcardSession pass: aFlashcard 
+	self flashcardSession passCard: aFlashcard 
 ]
 
 { #category : #accessing }
@@ -141,11 +176,31 @@ FlashcardsTraditionalLeitnerSystem >> pickRandomCard [
 ]
 
 { #category : #public }
+FlashcardsTraditionalLeitnerSystem >> pickRandomCardOtherwise: aBlock [
+
+	self flashcardSession isComplete ifTrue: [ ^aBlock value ].
+	
+	^ selectedCard := self flashcardSession pickRandomCard
+]
+
+{ #category : #public }
 FlashcardsTraditionalLeitnerSystem >> processAnswer: anAnswer [
 	"Check the answer and move the card forward if the answer is correct or move it backwards if the answer is wrong"
 	anAnswer = selectedCard answer
 		ifTrue: [ self moveSelectedCardForward ]
 		ifFalse: [ self moveSelectedCardBackwards ]
+]
+
+{ #category : #public }
+FlashcardsTraditionalLeitnerSystem >> processAnswer: anAnswer for: aFlashcard [
+	"Check the answer and move the card forward if the answer is correct or move it backwards if the answer is wrong"
+	
+	self nextCardAfter: aFlashcard  given: [ aFlashcard answer = anAnswer ]
+]
+
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> progress [
+	^self flashcardSession progress
 ]
 
 { #category : #'as yet unclassified' }
@@ -160,7 +215,22 @@ FlashcardsTraditionalLeitnerSystem >> remainingCards [
 
 { #category : #public }
 FlashcardsTraditionalLeitnerSystem >> removeCardNamed: aName ifAbsent: aBlock [
-	^boxes removeCardNamed: aName ifAbsent: aBlock 
+	self flashcardSession isComplete ifFalse: [ self error: 'Cant remove with active session' ].
+	self cards removeAllSuchThat: [ :c | c question = aName ]. 
+	
+]
+
+{ #category : #initialization }
+FlashcardsTraditionalLeitnerSystem >> reset [
+	
+	sessionCount := 1.
+	self flashcardSession reset.
+	
+]
+
+{ #category : #initialization }
+FlashcardsTraditionalLeitnerSystem >> resetSession [
+	self flashcardSession reset.
 ]
 
 { #category : #private }
@@ -193,10 +263,21 @@ FlashcardsTraditionalLeitnerSystem >> sessionCount: anObject [
 	sessionCount := anObject
 ]
 
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> sessionFrequencies [
+
+	^ sessionFrequencies
+]
+
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> sessionFrequencies: aCollection [ 
+	sessionFrequencies := aCollection
+]
+
 { #category : #public }
 FlashcardsTraditionalLeitnerSystem >> sessionFrequency [ 
 
-	^self boxSequences at: (self sessionCount  \\ self boxSequences size) + 1
+	^self sessionFrequencies at: (self sessionCount  \\ self sessionFrequencies size) + 0
 ]
 
 { #category : #'as yet unclassified' }
