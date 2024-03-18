@@ -52,7 +52,19 @@ Flashcard >> box: anObject [
 
 { #category : #'as yet unclassified' }
 Flashcard >> fail [
-	self box: (self box - 1 max: 1)
+	self box: (self box - 1 max: 1).
+	^self
+]
+
+{ #category : #testing }
+Flashcard >> hasLowestBoxValue [
+	^self box < 2
+	
+]
+
+{ #category : #testing }
+Flashcard >> hasReachedBoxLimit: aNumber [
+	^self box >= aNumber
 ]
 
 { #category : #comparing }
@@ -84,7 +96,8 @@ Flashcard >> matches: anObject [
 
 { #category : #'as yet unclassified' }
 Flashcard >> pass [
-	self box: self box + 1
+	self box: self box + 1.
+	^self
 ]
 
 { #category : #printing }

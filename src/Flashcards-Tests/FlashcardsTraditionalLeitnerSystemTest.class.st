@@ -82,8 +82,10 @@ FlashcardsTraditionalLeitnerSystemTest >> testMultipleIterations [
 	
 	self assert: system remaining equals: 2.
 	self assert: system numberPassed equals: 1.
+	self assert: system numberFailed equals: 0.
 	
 	selectedCard2 := system pickRandomCard.
+	
 	system fail: selectedCard2.
 	
 	self assert: system remaining equals: 1.
