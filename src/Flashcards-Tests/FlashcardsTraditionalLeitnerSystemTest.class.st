@@ -11,13 +11,13 @@ Class {
 FlashcardsTraditionalLeitnerSystemTest >> testAdvancingToNextSessionIncorporatesMultipleBoxes [
 
 	| system card1 card2 selectedCard1 selectedCard2 allCards |
-	system := FlashcardsTraditionalLeitnerSystem default.
+	system := FlashcardsTraditionalLeitnerSystem withBoxSequences: {{1}.{1. 2}}.
 
 	card1 := ($1 -> $1) asFlashcard.
 	card2 := ($2 -> $2) asFlashcard.
 	allCards := { card1. card2 }.
 
-	system addCards: allCards.
+	system addCards: allCards; nextSession.
 
 	selectedCard1 := system pickRandomCard.
 	system pass: selectedCard1.
@@ -29,7 +29,7 @@ FlashcardsTraditionalLeitnerSystemTest >> testAdvancingToNextSessionIncorporates
 
 	self assert: system hasCompletedSession.
 
-	system startSession.
+	system nextSession.
 	self deny: system hasCompletedSession.
 
 	self
@@ -40,15 +40,21 @@ FlashcardsTraditionalLeitnerSystemTest >> testAdvancingToNextSessionIncorporates
 { #category : #tests }
 FlashcardsTraditionalLeitnerSystemTest >> testAdvancingToNextSessionRestrictsANewGroup [
 
-	| system |
+	| system card1 card2 card3 cards |
 	
-	system := FlashcardsTraditionalLeitnerSystem schedule: {{1}. {1. 2}. {2. 3}. {4}}.
 	
-	self assert: (system newSession; applicableBoxes) equals: {1}.
-	self assert: (system nextSession; applicableBoxes) equals: {1. 2} .
-	self assert: (system nextSession; applicableBoxes) equals: { 2. 3 }.
-	self assert: (system newSession; applicableBoxes) equals: {1}.
-	"self assert: (system fullSession; applicableBoxes) equals: {1. 2. 3. 4 }."
+	system := FlashcardsTraditionalLeitnerSystem withBoxSequences: {{1}. {1. 2}. {3}}.
+	
+	cards := { card1 := '1' asFlashcardInBox: 1. card2 := '2' asFlashcardInBox: 2. card3 := '3' asFlashcardInBox: 3.}.
+	system addCards: cards.
+	
+	self assert: (system nextSession allCards) equals: {card1} asOrderedCollection .
+	self assert: (system nextSession allCards) equals: {card1. card2} asOrderedCollection.
+	self assert: (system nextSession allCards) equals: {card3} asOrderedCollection.
+	self assert: (system nextSession allCards) equals: {card1} asOrderedCollection.
+	self assert: (system nextSession allCards) equals: {card1. card2} asOrderedCollection.
+	self assert: (system resetSession allCards) equals: {card1} asOrderedCollection.
+	self assert: (system fullSession allCards) equals: cards asOrderedCollection.
 ]
 
 { #category : #tests }
@@ -62,10 +68,10 @@ FlashcardsTraditionalLeitnerSystemTest >> testMultipleIterations [
 	card2 := ($2 -> $2) asFlashcard.
 	card3 := ($3 -> $3) asFlashcard.
 	
-	system addCards: { card1. card2. card3 }; newSession.
+	system addCards: { card1. card2. card3 }; nextSession.
 	
-	self assert: system passed equals: 0.
-	self assert: system failed equals: 0.
+	self assert: system numberPassed equals: 0.
+	self assert: system numberFailed equals: 0.
 	self assert: system remaining equals: 3.
 	
 	selectedCard1 := system pickRandomCard.
@@ -75,12 +81,12 @@ FlashcardsTraditionalLeitnerSystemTest >> testMultipleIterations [
 	system pass: selectedCard1.
 	
 	self assert: system remaining equals: 2.
-	self assert: system passed equals: 1.
+	self assert: system numberPassed equals: 1.
 	
 	selectedCard2 := system pickRandomCard.
 	system fail: selectedCard2.
 	
 	self assert: system remaining equals: 1.
-	self assert: system passed equals: 1.
-	self assert: system failed equals: 1.
+	self assert: system numberPassed equals: 1.
+	self assert: system numberFailed equals: 1.
 ]

@@ -19,8 +19,8 @@ FlashcardsProbabilityLeitnerSystemTest >> testDefaultProbabilities [
 	results := Bag new.
 	
 	1000 timesRepeat: [ 
-		results add: fls selectRandomCard.
-		fls processAnswer: 'wrong anser'].
+		results add: fls pickRandomCard.
+		fls processAnswer: 'wrong answer'].
 	
 	topSelection := results sortedCounts first.
 	
@@ -40,20 +40,16 @@ FlashcardsProbabilityLeitnerSystemTest >> testEarlierBoxesMoreProbableToGetPicke
 	
 	fls := FlashcardsProbabilityLeitnerSystem withProbabilities: #(0.7 0.2 0.1).
 	
-	card1 := Flashcard question: 1 answer: 1.
-	card2 := Flashcard question: 2 answer: 2.
-	card3 := Flashcard question: 3 answer: 3.
-		
-		
-	"sneaky way to setup boxes in known state"
-	{card1. card2. card3} doWithIndex: [ :item :i |
-		(fls boxes at: i) addCard: item ].
-	
+	card1 := '1' asFlashcardInBox: 1.
+	card2 := '2' asFlashcardInBox: 2.
+	card3 := '3' asFlashcardInBox: 3.
+
+	fls addCards: { card1. card2. card3 }.
 	results := Bag new.
 	
 	10000 timesRepeat: [ 
-		results add: fls selectRandomCard.
-		fls returnSelectedCard  ].
+		results add: fls pickRandomCard.
+		"fls returnSelectedCard"  ].
 
 	topSelection := results cumulativeCounts first.
 	

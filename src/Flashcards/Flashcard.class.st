@@ -60,11 +60,21 @@ Flashcard >> hash [
 	^ question hash bitXor: answer hash
 ]
 
+{ #category : #testing }
+Flashcard >> ifNull: aBlock [
+	^self
+]
+
 { #category : #initialization }
 Flashcard >> initializeQuestion: aQuestion answer: anAnswer [
 
 	question := aQuestion.
 	answer := anAnswer
+]
+
+{ #category : #testing }
+Flashcard >> isNull [
+	^false
 ]
 
 { #category : #accessing }
@@ -88,6 +98,11 @@ Flashcard >> printOn: aStream [
 		nextPutAll: ', box: ';
 		print: self box;
 		nextPut: $)
+]
+
+{ #category : #accessing }
+Flashcard >> progressValue [
+	^1
 ]
 
 { #category : #accessing }

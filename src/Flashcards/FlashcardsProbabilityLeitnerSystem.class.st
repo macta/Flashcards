@@ -6,7 +6,8 @@ Class {
 		'random',
 		'boxCumulativeProbabilities',
 		'selectedBoxNumber',
-		'selectedCard'
+		'selectedCard',
+		'cards'
 	],
 	#category : #'Flashcards-Controllers'
 }
@@ -25,14 +26,19 @@ FlashcardsProbabilityLeitnerSystem class >> withProbabilities: aCollectionOfProb
 
 { #category : #public }
 FlashcardsProbabilityLeitnerSystem >> addCard: aCard [
-	"The new card always goes into the first box"
-	boxes first addCard: aCard.
+
+	self cards add: aCard.
+]
+
+{ #category : #accessing }
+FlashcardsProbabilityLeitnerSystem >> addCards: aCollection [ 
+	aCollection do: [ :c | self addCard: c ]
 ]
 
 { #category : #public }
 FlashcardsProbabilityLeitnerSystem >> allCards [
 
-	^boxes inject: OrderedCollection new into: [ :result  :box | result addAll: box cards; yourself ]
+	^self cards
 ]
 
 { #category : #accessing }
@@ -40,11 +46,29 @@ FlashcardsProbabilityLeitnerSystem >> boxes [
 	^ boxes
 ]
 
+{ #category : #accessing }
+FlashcardsProbabilityLeitnerSystem >> cards [
+
+	^ cards
+]
+
+{ #category : #accessing }
+FlashcardsProbabilityLeitnerSystem >> cards: anObject [
+
+	cards := anObject
+]
+
+{ #category : #public }
+FlashcardsProbabilityLeitnerSystem >> fail: aFlashcard [ 
+	selectedCard fail.
+	  
+]
+
 { #category : #initialization }
 FlashcardsProbabilityLeitnerSystem >> initialize [ 
 	super initialize.
 	random := Random new.
-	
+	cards := OrderedCollection new.
 	self initializeDefaultBoxes.
 ]
 
@@ -58,32 +82,26 @@ FlashcardsProbabilityLeitnerSystem >> initializeDefaultBoxes: aCollectionOfProba
 	| sum |
 	
 	boxes := OrderedCollection new.
-	aCollectionOfProbabilities size timesRepeat: [ boxes add: FlashcardList new ].
+	"aCollectionOfProbabilities size timesRepeat: [ boxes add: FlashcardList new ]".
 	
 	sum := 0.
-	boxCumulativeProbabilities := Dictionary new.
+	boxCumulativeProbabilities := OrderedCollection new.
 	
 	aCollectionOfProbabilities withIndexDo: [ :probability :i |
 		sum := sum + probability.
-		boxCumulativeProbabilities at: (boxes at: i) put: sum ].
+		boxCumulativeProbabilities add: sum ].
 ]
 
 { #category : #private }
 FlashcardsProbabilityLeitnerSystem >> moveSelectedCardBackwards [
 	"This happens if the answer was wrong. The card is moved back to the first box"
-	boxes first addCard: selectedCard.
+	selectedCard fail.
 ]
 
 { #category : #private }
 FlashcardsProbabilityLeitnerSystem >> moveSelectedCardForward [
 	"This happens if the answer is correct. The card should progress to the next box. And if it was already taken from the last box, it is put back into the last box"
-	| nextBoxNumber |
-	
-	nextBoxNumber := selectedBoxNumber = boxes size
-		ifTrue: [ selectedBoxNumber ]
-		ifFalse: [ selectedBoxNumber + 1].
-		
-	(boxes at: nextBoxNumber) addCard: selectedCard.
+	selectedCard box < boxCumulativeProbabilities size ifTrue: [ selectedCard pass ].
 ]
 
 { #category : #accessing }
@@ -92,9 +110,17 @@ FlashcardsProbabilityLeitnerSystem >> numberOfBoxes [
 ]
 
 { #category : #public }
+FlashcardsProbabilityLeitnerSystem >> pass: aFlashcard [ 
+	selectedCard pass.
+	  
+]
+
+{ #category : #public }
 FlashcardsProbabilityLeitnerSystem >> pickRandomCard [
-	self selectRandomBox.
-	^selectedCard := (boxes at: selectedBoxNumber) pickRandomCard.
+	| b filteredCards |
+	b := self selectRandomBox.
+	filteredCards := self allCards select: [ :c | c box = b ].
+	^selectedCard := filteredCards atRandom 
 ]
 
 { #category : #public }
@@ -127,7 +153,8 @@ FlashcardsProbabilityLeitnerSystem >> returnSelectedCard [
 { #category : #private }
 FlashcardsProbabilityLeitnerSystem >> selectRandomBox [
 	| nonemptyBoxes scalingCoefficient sumOfProbabilities randomNumber scaledProbability selectedBox |
-	nonemptyBoxes := boxes reject: [ :box | box isEmpty ].
+	"nonemptyBoxes := boxes reject: [ :box | box isEmpty ]".
+	nonemptyBoxes := (self allCards inject: Set new into: [ :r :c | r add: c box; yourself ]).
 	
 	nonemptyBoxes ifEmpty: [
 		Error signal: 'All boxes are empty' ].
@@ -139,9 +166,9 @@ FlashcardsProbabilityLeitnerSystem >> selectRandomBox [
 	
 	selectedBox := nonemptyBoxes detect: [ :box |
 		scaledProbability := (boxCumulativeProbabilities at: box) * scalingCoefficient.
-		randomNumber <= scaledProbability ] ifNone: [ nonemptyBoxes first ].
+		randomNumber <= scaledProbability ] ifNone: [ 1 ].
 	
-	selectedBoxNumber := boxes indexOf: selectedBox.
+	^selectedBox.
 ]
 
 { #category : #accessing }

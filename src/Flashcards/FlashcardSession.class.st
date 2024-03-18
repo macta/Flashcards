@@ -5,7 +5,8 @@ Class {
 		'passedCards',
 		'failedCards',
 		'currentCard',
-		'sessionCards'
+		'sessionCards',
+		'initialCards'
 	],
 	#category : #'Flashcards-Models'
 }
@@ -34,9 +35,10 @@ FlashcardSession class >> onEverything: aCollection [
 	^ self on: aCollection matching: [ :c | true ]
 ]
 
-{ #category : #public }
+{ #category : #accessing }
 FlashcardSession >> allCards [
-	^self failedCards, self passedCards, self sessionCards 
+
+	^initialCards 
 ]
 
 { #category : #accessing }
@@ -48,6 +50,12 @@ FlashcardSession >> boxes [
 { #category : #'as yet unclassified' }
 FlashcardSession >> cardsLeft [
 	^self sessionCards size
+]
+
+{ #category : #accessing }
+FlashcardSession >> clearCurrentCard [
+
+	self currentCard: NullFlashcard singleton
 ]
 
 { #category : #accessing }
@@ -70,8 +78,15 @@ FlashcardSession >> currentCard: anObject [
 
 { #category : #accessing }
 FlashcardSession >> failCard: aFlashcard [
-	
-	self failedCards add: aFlashcard fail
+
+	self failedCards add: aFlashcard fail.
+	self clearCurrentCard
+]
+
+{ #category : #accessing }
+FlashcardSession >> failCurrentCard [
+	self failedCards add: self currentCard fail.
+	self clearCurrentCard
 ]
 
 { #category : #accessing }
@@ -88,7 +103,9 @@ FlashcardSession >> hasCurrentCard [
 
 { #category : #initialization }
 FlashcardSession >> initializeOn: aCollection matching: aFullBlockClosure [ 
-	sessionCards := (aCollection select: aFullBlockClosure) asOrderedCollection.
+	initialCards := (aCollection select: aFullBlockClosure) asOrderedCollection.
+	sessionCards := initialCards copy.
+	self clearCurrentCard.
 	
 ]
 
@@ -101,7 +118,14 @@ FlashcardSession >> isComplete [
 FlashcardSession >> passCard: aFlashcard [
 
 	self passedCards add: aFlashcard pass.
-	self currentCard: nil
+	self clearCurrentCard
+]
+
+{ #category : #accessing }
+FlashcardSession >> passCurrentCard [
+
+	self passedCards add: self currentCard pass.
+	self clearCurrentCard
 ]
 
 { #category : #accessing }
@@ -119,21 +143,23 @@ FlashcardSession >> pickRandomCard [
 	
 	selectedCard := self sessionCards atRandom.
 	self sessionCards remove: selectedCard.
-	^ selectedCard 
+	^ self currentCard: selectedCard  
 	
 ]
 
 { #category : #'as yet unclassified' }
-FlashcardSession >> pickRandomCardIfNone: aConstantBlockClosure [
+FlashcardSession >> pickRandomCardIfNone: aBlock [
 
 	^ self isComplete
-		  ifTrue: aConstantBlockClosure
+		  ifTrue: [
+			  self clearCurrentCard.
+			  aBlock value ]
 		  ifFalse: [ self pickRandomCard ]
 ]
 
 { #category : #accessing }
 FlashcardSession >> progress [
-	^(self completedCards size)@(self sessionCards size) 
+	^(self completedCards size + self currentCard progressValue)@(self allCards size) 
 ]
 
 { #category : #accessing }
@@ -144,10 +170,12 @@ FlashcardSession >> remainingCards [
 
 { #category : #'as yet unclassified' }
 FlashcardSession >> reset [
-	self sessionCards addAll: self completedCards.
+	sessionCards := initialCards copy.
 	
 	failedCards := nil.
 	passedCards:= nil.
+	
+	self clearCurrentCard.
 	
 ]
 
