@@ -58,16 +58,24 @@ FlashcardsTraditionalLeitnerSystem >> cards [
 ]
 
 { #category : #'instance creation' }
+FlashcardsTraditionalLeitnerSystem >> cardsForFrequencies: frequencies [
+
+	^ self cards select: [ :c | frequencies includes: c box ]
+]
+
+{ #category : #'instance creation' }
 FlashcardsTraditionalLeitnerSystem >> createSession [
 
-	^ self createSessionUsing: self sessionBoxFilter
+	^self createSessionUsing: self sessionBoxFilter
 ]
 
 { #category : #'instance creation' }
 FlashcardsTraditionalLeitnerSystem >> createSessionUsing: frequencies [
+
 	passedCards := OrderedCollection new.
 	failedCards := OrderedCollection new.
-	^FlashcardSession on: (self cards select: [ :c | frequencies includes: c box ])
+	selectedCard := nil.
+	^ self flashcardSession: (FlashcardSession on: (self cardsForFrequencies: frequencies))
 ]
 
 { #category : #public }
@@ -107,6 +115,19 @@ FlashcardsTraditionalLeitnerSystem >> hasCompletedSession [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+FlashcardsTraditionalLeitnerSystem >> hasSessionCards [ 
+
+	^(self cardsForFrequencies: self sessionBoxFilter) isNotEmpty
+	
+]
+
+{ #category : #public }
+FlashcardsTraditionalLeitnerSystem >> highestBox [
+
+	^(self sessionBoxFilters flatCollectAsSet: [:c | c]) max
+]
+
 { #category : #initialization }
 FlashcardsTraditionalLeitnerSystem >> initialize [ 
 	super initialize.
@@ -121,7 +142,9 @@ FlashcardsTraditionalLeitnerSystem >> initialize [
 FlashcardsTraditionalLeitnerSystem >> nextSession [
 
 	self sessionCount: self sessionCount + 1.
-	^self flashcardSession: self createSession.
+	self hasSessionCards ifFalse: [ self nextSession ].
+	
+	^self createSession.
 	
 ]
 
@@ -129,6 +152,11 @@ FlashcardsTraditionalLeitnerSystem >> nextSession [
 FlashcardsTraditionalLeitnerSystem >> numberFailed [
 	
 	^self failedCards size
+]
+
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> numberOfCards [
+	^self numberPassed + self numberFailed
 ]
 
 { #category : #accessing }
@@ -170,7 +198,7 @@ FlashcardsTraditionalLeitnerSystem >> process: answerBlock for: aFlashcard [
 
 	answerBlock value
 		ifTrue: [
-			(aFlashcard hasReachedBoxLimit: self repetitionCount) ifFalse: [ aFlashcard pass ].
+			(aFlashcard hasReachedBoxLimit: self highestBox) ifFalse: [ aFlashcard pass ].
 			self passedCards add: aFlashcard ]
 		ifFalse: [ self failedCards add: aFlashcard fail ]
 ]
@@ -209,13 +237,6 @@ FlashcardsTraditionalLeitnerSystem >> removeCardNamed: aName ifAbsent: aBlock [
 	self flashcardSession isComplete ifFalse: [ self error: 'Cant remove with active session' ].
 	self cards removeAllSuchThat: [ :c | c question = aName ]. 
 	
-]
-
-{ #category : #public }
-FlashcardsTraditionalLeitnerSystem >> repetitionCount [
-	"Answer the number of test repetitions defined before it cycles around"
-	
-	^self sessionBoxFilters size
 ]
 
 { #category : #initialization }
