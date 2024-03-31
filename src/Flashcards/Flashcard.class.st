@@ -50,8 +50,10 @@ Flashcard >> box: anObject [
 	box := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #api }
 Flashcard >> fail [
+	"demote the card by reducing its box up to 1"
+	
 	self box: (self box - 1 max: 1).
 	^self
 ]
@@ -89,13 +91,15 @@ Flashcard >> isNull [
 	^false
 ]
 
-{ #category : #accessing }
+{ #category : #comparing }
 Flashcard >> matches: anObject [
 	^ self answer = anObject 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #api }
 Flashcard >> pass [
+	"advance the card in its box"
+	
 	self box: self box + 1.
 	^self
 ]
@@ -113,9 +117,11 @@ Flashcard >> printOn: aStream [
 		nextPut: $)
 ]
 
-{ #category : #accessing }
-Flashcard >> progressValue [
-	^1
+{ #category : #api }
+Flashcard >> progressValueScaledBy: anIntegerBoxCount [ 
+	"Answer the value score for this cards progress - 1 is the max score achieved if the card reaches the boxCount"
+	
+	^(self box - 1) / (anIntegerBoxCount - 1)
 ]
 
 { #category : #accessing }

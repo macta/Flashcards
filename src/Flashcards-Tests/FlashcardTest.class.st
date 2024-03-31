@@ -92,6 +92,20 @@ FlashcardTest >> testMatches [
 ]
 
 { #category : #tests }
+FlashcardTest >> testProgressValue [
+	| card1 card2 card3 |
+	
+	card1 := '1' asFlashcardInBox: 1.
+	card2 := '2' asFlashcardInBox: 3.
+	card3 := '3' asFlashcardInBox: 2.
+	
+	self assert: (card1 progressValueScaledBy: 3) equals: 0.
+	self assert: (card2 progressValueScaledBy: 3) equals: 1.
+	self assert: (card3 progressValueScaledBy: 4) equals: 1/3.
+	self assert: (card3 progressValueScaledBy: 3) equals: 1/2.
+]
+
+{ #category : #tests }
 FlashcardTest >> testPromote [
 	| card1 |
 	

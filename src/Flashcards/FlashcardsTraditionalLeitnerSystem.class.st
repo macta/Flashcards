@@ -138,6 +138,13 @@ FlashcardsTraditionalLeitnerSystem >> initialize [
 	
 ]
 
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> maxBox [
+	^self sessionBoxFilters flattened max
+
+	
+]
+
 { #category : #'as yet unclassified' }
 FlashcardsTraditionalLeitnerSystem >> nextSession [
 
@@ -217,11 +224,6 @@ FlashcardsTraditionalLeitnerSystem >> processAnswer: anAnswer for: aFlashcard [
 	self process: [ aFlashcard answer = anAnswer ] for: aFlashcard
 ]
 
-{ #category : #accessing }
-FlashcardsTraditionalLeitnerSystem >> progress [
-	^self flashcardSession progress
-]
-
 { #category : #'as yet unclassified' }
 FlashcardsTraditionalLeitnerSystem >> remaining [
 	^self remainingCards size
@@ -293,4 +295,9 @@ FlashcardsTraditionalLeitnerSystem >> sessionCount [
 FlashcardsTraditionalLeitnerSystem >> sessionCount: anObject [
 
 	sessionCount := anObject
+]
+
+{ #category : #accessing }
+FlashcardsTraditionalLeitnerSystem >> sessionProgress [
+	^self flashcardSession progress
 ]

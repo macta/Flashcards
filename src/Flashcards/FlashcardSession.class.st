@@ -98,7 +98,7 @@ FlashcardSession >> reset [
 { #category : #accessing }
 FlashcardSession >> selectedCards [
 
-	^ selectedCards
+	^ selectedCards ifNil: [ selectedCards := OrderedCollection new ]
 ]
 
 { #category : #accessing }
