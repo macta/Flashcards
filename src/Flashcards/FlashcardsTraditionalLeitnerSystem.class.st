@@ -301,3 +301,14 @@ FlashcardsTraditionalLeitnerSystem >> sessionCount: anObject [
 FlashcardsTraditionalLeitnerSystem >> sessionProgress [
 	^self flashcardSession progress
 ]
+
+{ #category : #tests }
+FlashcardsTraditionalLeitnerSystem >> testProgress [
+	"Answer the fraction of progress in the test 0-1. 1 is when all cards are in the maximum box"
+	
+	| maxBox valueCompleted |
+	maxBox := self maxBox.
+	
+	valueCompleted := self allCards inject: 0 into: [ :v :c | v + (c progressValueScaledBy: maxBox) ].
+	^ valueCompleted / (self allCards size)
+]
