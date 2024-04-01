@@ -72,10 +72,9 @@ FlashcardsTraditionalLeitnerSystem >> createSession [
 { #category : #'instance creation' }
 FlashcardsTraditionalLeitnerSystem >> createSessionUsing: frequencies [
 
-	passedCards := OrderedCollection new.
-	failedCards := OrderedCollection new.
-	selectedCard := nil.
-	^ self flashcardSession: (FlashcardSession on: (self cardsForFrequencies: frequencies))
+	self initializeSessionDefaults.
+	^ self flashcardSession:
+		  (FlashcardSession on: (self cardsForFrequencies: frequencies))
 ]
 
 { #category : #public }
@@ -133,9 +132,18 @@ FlashcardsTraditionalLeitnerSystem >> initialize [
 	super initialize.
 	random := Random new.
 	cards := OrderedCollection new.
+	self initializeSessionDefaults.
 	
 	sessionCount := 0.
 	
+]
+
+{ #category : #'instance creation' }
+FlashcardsTraditionalLeitnerSystem >> initializeSessionDefaults [
+
+	passedCards := OrderedCollection new.
+	failedCards := OrderedCollection new.
+	selectedCard := nil
 ]
 
 { #category : #accessing }
@@ -277,7 +285,7 @@ FlashcardsTraditionalLeitnerSystem >> sessionBoxFilter [
 { #category : #accessing }
 FlashcardsTraditionalLeitnerSystem >> sessionBoxFilters [
 
-	^ sessionBoxFilters
+	^ sessionBoxFilters ifNil: [ sessionBoxFilters := OrderedCollection new ]
 ]
 
 { #category : #accessing }
